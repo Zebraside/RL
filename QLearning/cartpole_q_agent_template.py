@@ -5,20 +5,28 @@ from qlearning import QLearningAgent
 import numpy as np
 import time
 
-
 def discretize_range(lower_bound, upper_bound, num_bins):
     return np.linspace(lower_bound, upper_bound, num_bins + 1)[1:-1]
 
+state_bins = [  # Cart position.
+    discretize_range(-2.4, 2.4, 2),
+    # Cart velocity.
+    discretize_range(-3.0, 3.0, 2),
+    # Pole angle.
+    discretize_range(-0.5, 0.5, 7),
+    # Tip velocity.
+    discretize_range(-2.0, 2.0, 7)
+]
+
+max_bins = max(len(bin) for bin in state_bins)
 
 def discretize_value(value, bins):
     return np.digitize(x=value, bins=bins)
 
 
 def build_state(observation):
-	# you should use discretize_value() functions to build single state representation.
-    print(observation)
-    state = None
-	
+    # you should use discretize_value() functions to build single state representation.
+    state = sum(discretize_value(feature, state_bins[i]) * ((max_bins + 1) ** i) for i, feature in enumerate(observation))
     return state
 
 
@@ -33,7 +41,7 @@ def play_and_train(env, agent, visualize=False, t_max=10 ** 4):
     for t in range(t_max):
         d_s = build_state(s)
 
-        a = agent.getAction(d_s)
+        a = agent.get_action(d_s)
 
         next_s, r, done, _ = env.step(a)
         if visualize:
@@ -53,13 +61,13 @@ if __name__ == '__main__':
     env = gym.make("CartPole-v0").env
     env.reset()
     n_actions = env.action_space.n
-
+    print (n_actions)
     print(env.observation_space.high)
     print(env.observation_space.low)
     print('CartPole state: %s' % (env.reset()))
 
     agent = QLearningAgent(alpha=0.3, epsilon=0.5, discount=1.0,
-                           getLegalActions=lambda s: range(n_actions))
+                           get_legal_actions=lambda s: range(n_actions))
 
     # (x, x', theta, theta')
     state_bins = [  # Cart position.
@@ -75,7 +83,7 @@ if __name__ == '__main__':
 
     rewards = []
     for i in range(2000):
-        rewards.append(play_and_train(env, agent))
+        rewards.append(play_and_train(env, agent, True))
         agent.epsilon *= 0.999
 
         if i % 10 == 0:
