@@ -5,6 +5,8 @@ import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
 
+from PIL import Image
+
 
 class PreprocessAtari(ObservationWrapper):
     def __init__(self, env):
@@ -24,9 +26,13 @@ class PreprocessAtari(ObservationWrapper):
         #      e.g. opencv, skimage, PIL, keras)
         #  * cast image to grayscale
         #  * convert image pixels to (0,1) range, float32 type
-
-        img = None
-        return img.astype(np.float32)
+        img = img[30 : -1, 9 : -8, :]
+        img = cv.resize(img, (64, 64))
+        img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+        img = np.reshape(img, self.img_size)
+        print ("Shape", img.shape)
+        img = img.astype(np.float32) / 255
+        return img
 
 
 if __name__ == '__main__':
@@ -35,6 +41,7 @@ if __name__ == '__main__':
     env = PreprocessAtari(env)
 
     observation_shape = env.observation_space.shape
+    print(observation_shape)
     n_actions = env.action_space.n
 
     env.reset()

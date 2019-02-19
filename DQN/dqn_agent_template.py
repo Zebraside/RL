@@ -14,6 +14,11 @@ class DQNAgent(nn.Module):
         img_c, img_w, img_h = state_shape
 
         # Define your network body here. Please make sure agent is fully contained here
+        conv1 4, 16
+        conv 2 16 32
+        conv 32 64
+        fc1 64 x h x w
+        fc2 256 x actions 
 
 
     def forward(self, state_t):
