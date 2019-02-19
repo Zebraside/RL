@@ -182,7 +182,7 @@ if __name__ == '__main__':
     # Create Adam optimizer with lr=1e-4
     opt = torch.optim.Adam(network.parameters(), lr=1e-4)
     epsilon = 0.4
-    max_epochs = 1000
+    max_epochs = 20
     if dump_logs:
         log_path = './logs/{:%Y_%m_%d_%H_%M}'.format(datetime.datetime.now())
         writer = SummaryWriter(log_path)
@@ -195,6 +195,7 @@ if __name__ == '__main__':
 
         # Code Epsilon decay <HERE>
         # epsilon ?
+        epsilon *= 0.8
         assert epsilon >= 1e-4, 'Make sure epsilon is always nonzero during training'
 
         if np.mean(session_rewards) > 300:
