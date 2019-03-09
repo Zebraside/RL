@@ -8,43 +8,43 @@ from replay_buffer import ReplayBuffer
 
 
 def compute_td_loss(states, actions, rewards, next_states, is_done, gamma=0.99, check_shapes=False):
-    """ Compute td loss using torch operations only. Use the formula above. """
-    states = Variable(torch.FloatTensor(states))  # shape: [batch_size, c, h, w]
-    actions = Variable(torch.LongTensor(actions))  # shape: [batch_size]
+    """ Compute td loss using torch operations only."""
+    states = Variable(torch.FloatTensor(states))  # shape: [batch_size, state_size]
+    actions = Variable(torch.IntTensor(actions))  # shape: [batch_size]
     rewards = Variable(torch.FloatTensor(rewards))  # shape: [batch_size]
-    next_states = Variable(torch.FloatTensor(next_states))  # shape: [batch_size, c, h, w]
-    is_done = Variable(torch.FloatTensor(is_done.astype('float32')))  # shape: [batch_size]
-    is_not_done = 1 - is_done
+    next_states = Variable(torch.FloatTensor(next_states))  # shape: [batch_size, state_size]
+    is_done = Variable(torch.FloatTensor(is_done))  # shape: [batch_size]
 
     # get q-values for all actions in current states
-    predicted_qvalues = None
-
-    # compute q-values for all actions in next states
-    predicted_next_qvalues = None
+    predicted_qvalues = network(states)
 
     # select q-values for chosen actions
-    predicted_qvalues_for_actions = predicted_qvalues[range(len(actions)), actions]
+    predicted_qvalues_for_actions = torch.sum(predicted_qvalues.cpu() * to_one_hot(actions, n_actions), dim=1)
+
+    # compute q-values for all actions in next states
+    predicted_next_qvalues = network(next_states)
 
     # compute V*(next_states) using predicted next q-values
-    next_state_values = None
+    next_state_values = predicted_next_qvalues.max()
 
-    next_state_values = next_state_values * is_not_done
+    assert isinstance(next_state_values.data, torch.FloatTensor)
 
-    assert next_state_values.dim() == 1 and next_state_values.shape[0] == states.shape[
-        0], "must predict one value per state"
+    # compute 'target q-values' for loss
+    target_qvalues_for_actions = rewards + gamma * next_state_values
 
-    # compute "target q-values" for loss - it's what's inside square parentheses in the above formula.
-    # at the last state use the simplified formula: Q(s,a) = r(s,a) since s' doesn't exist
-    # you can multiply next state values by is_not_done to achieve this.
-    target_qvalues_for_actions = None
+    # at the last state we shall use simplified formula: Q(s,a) = r(s,a) since s' doesn't exist
+    target_qvalues_for_actions = where(is_done, rewards, target_qvalues_for_actions).cpu()
 
-    # mean squared error loss to minimize
+    # Mean Squared Error loss to minimize
     loss = torch.mean((predicted_qvalues_for_actions - target_qvalues_for_actions.detach()) ** 2)
 
     if check_shapes:
-        assert predicted_next_qvalues.data.dim() == 2, "make sure you predicted q-values for all actions in next state"
-        assert next_state_values.data.dim() == 1, "make sure you computed V(s') as maximum over just the actions axis and not all axes"
-        assert target_qvalues_for_actions.data.dim() == 1, "there's something wrong with target q-values, they must be a vector"
+        assert predicted_next_qvalues.data.dim() == 2, \
+            'make sure you predicted q-values for all actions in next state'
+        assert next_state_values.data.dim() == 1, \
+            'make sure you computed V(s-prime) as maximum over just the actions axis and not all axes'
+        assert target_qvalues_for_actions.data.dim() == 1, \
+            'there is something wrong with target q-values, they must be a vector'
 
     return loss
 
