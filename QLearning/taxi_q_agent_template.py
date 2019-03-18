@@ -2,7 +2,7 @@ import gym.spaces
 import matplotlib.pyplot as plt
 import numpy as np
 
-from qlearning_template import QLearningAgent
+from qlearning import QLearningAgent
 
 def play_and_train(env, agent, t_max=10 ** 4):
     """ This function should
