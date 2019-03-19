@@ -29,7 +29,7 @@ class PreprocessAtari(ObservationWrapper):
         img = cv.resize(img, (64, 64))
         img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         img = np.reshape(img, self.img_size)
-        return img.astype(np.float32)
+        return img.astype(np.float32) / 255
 
 
 if __name__ == '__main__':

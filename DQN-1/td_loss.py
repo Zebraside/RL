@@ -22,15 +22,13 @@ def compute_td_loss(states, actions, rewards, next_states, is_done, agent, targe
     predicted_qvalues = agent(states)
 
     # compute q-values for all actions in next states
-    predicted_next_qvalues = agent(next_states)
+    predicted_next_qvalues = target_network(next_states)
 
     # select q-values for chosen actions
     predicted_qvalues_for_actions = predicted_qvalues[range(len(actions)), actions]
 
-    print("predicted", predicted_qvalues_for_actions)
     # compute V*(next_states) using predicted next q-values
     next_state_values = predicted_qvalues_for_actions.max()
-    print("max", next_state_values)
     next_state_values = next_state_values * is_not_done
 
     assert next_state_values.dim() == 1 and next_state_values.shape[0] == states.shape[

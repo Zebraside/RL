@@ -52,7 +52,7 @@ def play_and_record(agent, env, exp_replay, n_steps=1, render=False):
     mean_reward = 0
     # Play the game for n_steps as per instructions above
     for t in range(n_steps):
-        print(t)
+        #print(t)
         qvalues = agent.get_qvalues([s])
         action = qvalues.argmax(axis=-1)[0] if greedy else agent.sample_actions(qvalues)[0]
 
@@ -88,7 +88,7 @@ def show_output():
     plt.imshow(env.render("rgb_array"))
     plt.show()
     plt.title("Agent observation (4 frames top to bottom)")
-    plt.imshow(obs.reshape([-1, state_dim[2]]));
+    plt.imshow(obs.reshape([-1, state_dim[2]]))
     plt.show()
 
 
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     #       replay_buffer.py should not be modified.
 
     # Here what you get as input
-    show_output()
+    #show_output()
     env = make_env()
 
     observation_shape = env.observation_space.shape

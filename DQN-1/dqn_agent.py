@@ -13,11 +13,11 @@ class DQNAgent(nn.Module):
         self.n_actions = n_actions
         img_c, img_w, img_h = state_shape
         # Define your network body here. Please make sure agent is fully contained here
-        self.c1 = nn.Conv2d(img_c, 16, 7)
-        self.c2 = nn.Conv2d(16, 32, 5)
-        self.c3 = nn.Conv2d(32, 64, 3)
-        self.fc1 = nn.Linear(64 * 52 * 52, 256)
-        self.fc2 = nn.Linear(256, n_actions)
+        self.c1 = nn.Conv2d(4, 16, kernel_size=3)
+        self.c2 = nn.Conv2d(16, 32, kernel_size=3)
+        self.c3 = nn.Conv2d(32, 64, kernel_size=3)
+        self.fc1 = nn.Linear(215296, 256)
+        self.fc2 = nn.Linear(256, self.n_actions)
 
     def forward(self, state_t):
         """
@@ -25,19 +25,20 @@ class DQNAgent(nn.Module):
         :param state_t: a batch of 4-frame buffers, shape = [batch_size, 4, h, w]
         Hint: if you're running on GPU, use state_t.cuda() right here.
         """
-        state_t.cuda()
-        
-        x = F.relu(self.c1(state_t))
-        x = F.relu(self.c2(x))
-        x = F.relu(self.c3(x))
-        size = x.size()[1:]
+
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        state_t.to(device)
+        state_t = F.relu(self.c1(state_t))#F.max_pool2d(F.relu(self.c1(state_t)), 2)
+        state_t = F.relu(self.c2(state_t))#F.max_pool2d(F.relu(self.c2(state_t)), 2)
+        state_t = F.relu(self.c3(state_t))#F.max_pool2d(F.relu(self.c3(state_t)), 2)
+        size = state_t.size()[1:]
         num_f = 1
         for s in size:
             num_f *= s
-        x = x.view(-1, num_f)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        qvalues = x
+        state_t = state_t.view(-1, num_f)
+        state_t = F.relu(self.fc1(state_t))
+        state_t = F.relu(self.fc2(state_t))
+        qvalues = state_t
 
         assert isinstance(qvalues, Variable) and qvalues.requires_grad, "qvalues must be a torch variable with grad"
         assert len(qvalues.shape) == 2
